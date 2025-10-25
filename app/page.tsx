@@ -16,7 +16,7 @@ export default function Home() {
   //const IMAGE_PATH = "sample-artworks/The_Kiss-Gustav_Klimt.jpg"; // in /public
   //const IMAGE_PATH = "sample-artworks/Tequila_Sunset-Disco_Elysium.png";
 
-  const [imagePath, setImagePath] = useState("sample-artworks/The_Kiss-Gustav_Klimt.jpg");
+  const [imagePath, setImagePath] = useState("sample-artworks/The_Saturday_Evening_Post-J.C.Leyendecker.jpg");
 
   // List of sample artworks
   const artworks = [
@@ -57,6 +57,7 @@ export default function Home() {
   useEffect(() => {
     async function describeArtwork() {
       try {
+        
         console.log("🎨 Starting image processing...");
         const { imageBase64, regions, paddedWidth, paddedHeight } =
           (await processImageFromUrl(imagePath, regionSize, 1200)) as any;
@@ -131,7 +132,7 @@ export default function Home() {
         Talk Art to Me
       </h1>
       <p className="text-300 text-primary text-xs max-w-md mb-2">
-        Tap on a region to hear its description aloud
+        AI-generated accessibility description for art
       </p>
 
       {/* Image container (centered vertically + horizontally) */}
@@ -140,47 +141,56 @@ export default function Home() {
           <img
             ref={imgRef}
             src={imagePath}
+            onLoad={() => {
+              const img = imgRef.current;
+              if (!img || !canvasSize.width || !canvasSize.height) return;
+              setImgScale({
+                x: img.clientWidth / canvasSize.width,
+                y: img.clientHeight / canvasSize.height,
+              });
+            }}
             className="object-contain max-w-[100vw] max-h-[calc(100dvh-120px)] rounded-md"
           />
 
-          {/* Reactive + clickable grid overlay */}
-          {showGrid && (
-            <div className="absolute top-0 left-0 w-full h-full z-10">
-              {regions.map(({ coords: [x, y], caption }, i) => {
-                const left = x * imgScale.x;
-                const top = y * imgScale.y;
-                const width = regionSize * imgScale.x;
-                const height = regionSize * imgScale.y;
-                return (
-                  <div
-                    key={i}
-                    onClick={() => speak(caption || `Region ${i + 1}`)}
-                    style={{
-                      position: "absolute",
-                      left,
-                      top,
-                      width,
-                      height,
-                      border: "1px solid rgba(255,255,255,0.4)",
-                      boxSizing: "border-box",
-                      backgroundColor: "rgba(255,255,255,0.05)",
-                      transition: "all 0.15s ease-out",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.15)")
-                    }
-                    onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor =
-                      "rgba(255,255,255,0.05)")
-                    }
-                    title={caption}
-                  />
-                );
-              })}
-            </div>
-          )}
+          {/* Reactive + clickable grid overlay (clickable even when hidden) */}
+          <div className="absolute top-0 left-0 w-full h-full z-10">
+            {regions.map(({ coords: [x, y], caption }, i) => {
+              const left = x * imgScale.x;
+              const top = y * imgScale.y;
+              const width = regionSize * imgScale.x;
+              const height = regionSize * imgScale.y;
+              return (
+                <div
+                  key={i}
+                  onClick={() => speak(caption || `Region ${i + 1}`)}
+                  style={{
+                    position: "absolute",
+                    left,
+                    top,
+                    width,
+                    height,
+                    border: showGrid ? "1px solid rgba(255,255,255,0.4)" : "none",
+                    backgroundColor: showGrid
+                      ? "rgba(255,255,255,0.05)"
+                      : "transparent",
+                    transition: "all 0.15s ease-out",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => {
+                    if (showGrid)
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(255,255,255,0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (showGrid)
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(255,255,255,0.05)";
+                  }}
+                  title={caption}
+                />
+              );
+            })}
+          </div>
         </div>
       </div>
 
