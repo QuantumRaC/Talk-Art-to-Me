@@ -42,7 +42,7 @@ export default function Home() {
     if (!text) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
-    utterance.rate = 2;
+    utterance.rate = 0.5;
     utterance.pitch = 1;
     speechSynthesis.cancel(); // stop current speech before speaking new
     speechSynthesis.speak(utterance);
