@@ -22,7 +22,7 @@ export default function Home() {
     if (!text) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
-    utterance.rate = 5;
+    utterance.rate = 2;
     utterance.pitch = 1;
     speechSynthesis.cancel(); // stop current speech before speaking new
     speechSynthesis.speak(utterance);
@@ -114,53 +114,56 @@ export default function Home() {
         Tap on a region to hear its description aloud
       </p>
 
-      {/* Image container */}
-      <div className="relative flex justify-center items-center max-w-full max-h-full">
-        <img
-          ref={imgRef}
-          src={IMAGE_PATH}
-          className="max-w-screen max-h-[calc(100dvh-80px)] object-contain rounded-md"
-        />
+      {/* Image container (centered vertically + horizontally) */}
+      <div className="flex flex-1 items-center justify-center w-full h-full relative overflow-hidden">
+        <div className="relative flex items-center justify-center">
+          <img
+            ref={imgRef}
+            src={IMAGE_PATH}
+            className="object-contain max-w-[100vw] max-h-[calc(100dvh-120px)] rounded-md"
+          />
 
-        {/* Reactive + clickable grid overlay */}
-        {showGrid && (
-          <div className="absolute top-0 left-0 w-full h-full">
-            {regions.map(({ coords: [x, y], caption }, i) => {
-              const left = x * imgScale.x;
-              const top = y * imgScale.y;
-              const width = regionSize * imgScale.x;
-              const height = regionSize * imgScale.y;
-              return (
-                <div
-                  key={i}
-                  onClick={() => speak(caption || `Region ${i + 1}`)}
-                  style={{
-                    position: "absolute",
-                    left,
-                    top,
-                    width,
-                    height,
-                    border: "1px solid rgba(255,255,255,0.4)",
-                    boxSizing: "border-box",
-                    backgroundColor: "rgba(255,255,255,0.05)",
-                    transition: "all 0.15s ease-out",
-                    cursor: "pointer",
-                  }}
-                  onMouseEnter={(e) =>
+          {/* Reactive + clickable grid overlay */}
+          {showGrid && (
+            <div className="absolute top-0 left-0 w-full h-full z-10">
+              {regions.map(({ coords: [x, y], caption }, i) => {
+                const left = x * imgScale.x;
+                const top = y * imgScale.y;
+                const width = regionSize * imgScale.x;
+                const height = regionSize * imgScale.y;
+                return (
+                  <div
+                    key={i}
+                    onClick={() => speak(caption || `Region ${i + 1}`)}
+                    style={{
+                      position: "absolute",
+                      left,
+                      top,
+                      width,
+                      height,
+                      border: "1px solid rgba(255,255,255,0.4)",
+                      boxSizing: "border-box",
+                      backgroundColor: "rgba(255,255,255,0.05)",
+                      transition: "all 0.15s ease-out",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) =>
                     (e.currentTarget.style.backgroundColor =
                       "rgba(255,255,255,0.15)")
-                  }
-                  onMouseLeave={(e) =>
+                    }
+                    onMouseLeave={(e) =>
                     (e.currentTarget.style.backgroundColor =
                       "rgba(255,255,255,0.05)")
-                  }
-                  title={caption}
-                />
-              );
-            })}
-          </div>
-        )}
+                    }
+                    title={caption}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
+
 
       {/* Toggle grid + Stop speech */}
       <div className="absolute top-4 right-4 flex gap-2">
