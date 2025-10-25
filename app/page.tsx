@@ -13,8 +13,28 @@ export default function Home() {
   const [imgScale, setImgScale] = useState({ x: 1, y: 1 });
 
   const imgRef = useRef<HTMLImageElement>(null);
-  //const IMAGE_PATH = "/The_Kiss-Gustav_Klimt.jpg"; // in /public
-  const IMAGE_PATH = "/Tequila_Sunset-Disco_Elysium.png";
+  //const IMAGE_PATH = "sample-artworks/The_Kiss-Gustav_Klimt.jpg"; // in /public
+  //const IMAGE_PATH = "sample-artworks/Tequila_Sunset-Disco_Elysium.png";
+
+  const [imagePath, setImagePath] = useState("sample-artworks/The_Kiss-Gustav_Klimt.jpg");
+
+  // List of sample artworks
+  const artworks = [
+    "sample-artworks/The_Kiss-Gustav_Klimt.jpg",
+    "sample-artworks/Tequila_Sunset-Disco_Elysium.png",
+    "sample-artworks/The_Empress-Cyberpunk_2077.jpg",
+    "sample-artworks/The_Saturday_Evening_Post-J.C.Leyendecker.jpg",
+    "sample-artworks/The_Virgin-Gustav_Klimt.jpg",
+  ];
+
+  // Function to pick a random artwork
+  function loadRandomArtwork() {
+    const random = artworks[Math.floor(Math.random() * artworks.length)];
+    setImagePath(random);
+    setLoading(true);
+    setOutput("Preparing image...");
+  }
+
   const regionSize = 200; // must match your imageProcessing.ts
 
   // 🗣️ TTS: helper to speak text aloud
@@ -39,7 +59,7 @@ export default function Home() {
       try {
         console.log("🎨 Starting image processing...");
         const { imageBase64, regions, paddedWidth, paddedHeight } =
-          (await processImageFromUrl(IMAGE_PATH, regionSize, 1200)) as any;
+          (await processImageFromUrl(imagePath, regionSize, 1200)) as any;
 
         console.log("📦 Processed:", regions.length, "regions");
         setRegions(regions);
@@ -119,7 +139,7 @@ export default function Home() {
         <div className="relative flex items-center justify-center">
           <img
             ref={imgRef}
-            src={IMAGE_PATH}
+            src={imagePath}
             className="object-contain max-w-[100vw] max-h-[calc(100dvh-120px)] rounded-md"
           />
 
@@ -179,6 +199,13 @@ export default function Home() {
         >
           Stop
         </button>
+        <button
+          onClick={loadRandomArtwork}
+          className="bg-green-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition"
+        >
+          Random Artwork
+        </button>
+
       </div>
 
       {/* Status + Output */}
