@@ -224,11 +224,11 @@ export default function Home() {
       )}
       {error && <p className="text-red-400 font-medium mt-2">Error: {error}</p>}
 
-      {!loading && !error && (
+      {/* {!loading && !error && (
         <pre className="bg-gray-100 p-4 rounded-md w-full max-w-3xl overflow-auto text-left text-sm mt-3">
           {output}
         </pre>
-      )}
+      )} */}
     </main>
   );
 }
