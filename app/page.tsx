@@ -8,23 +8,38 @@ export default function Home() {
   const [showGrid, setShowGrid] = useState(true);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [regions, setRegions] = useState<{ coords: [number, number] }[]>([]);
+  const [regions, setRegions] = useState<{ coords: [number, number]; caption?: string }[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [imgScale, setImgScale] = useState({ x: 1, y: 1 });
+
   const imgRef = useRef<HTMLImageElement>(null);
+  //const IMAGE_PATH = "/The_Kiss-Gustav_Klimt.jpg"; // in /public
+  const IMAGE_PATH = "/Tequila_Sunset-Disco_Elysium.png";
+  const regionSize = 200; // must match your imageProcessing.ts
 
-  const IMAGE_PATH = "/The_Kiss-Gustav_Klimt.jpg"; // in /public
-  const regionSize = 200; // must match imageProcessing.ts region size
+  // 🗣️ TTS: helper to speak text aloud
+  function speak(text: string) {
+    if (!text) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1;
+    utterance.pitch = 1;
+    speechSynthesis.cancel(); // stop current speech before speaking new
+    speechSynthesis.speak(utterance);
+  }
 
+  // 🗣️ Optional: stop speech if needed
+  function stopSpeaking() {
+    speechSynthesis.cancel();
+  }
+
+  // Load and describe the artwork
   useEffect(() => {
     async function describeArtwork() {
       try {
-        console.log("🎨 [Client] Starting image processing...");
+        console.log("🎨 Starting image processing...");
         const { imageBase64, regions, paddedWidth, paddedHeight } =
-          (await processImageFromUrl(
-            IMAGE_PATH,
-            regionSize,
-            1200
-          )) as any;
+          (await processImageFromUrl(IMAGE_PATH, regionSize, 1200)) as any;
 
         console.log("📦 Processed:", regions.length, "regions");
         setRegions(regions);
@@ -41,8 +56,17 @@ export default function Home() {
         const data = await response.json();
         console.log("✅ Gemini returned:", data);
         setOutput(JSON.stringify(data, null, 2));
+
+        // 🗣️ Attach captions to regions if available
+        if (data?.regions?.length) {
+          const merged = regions.map((r: any, i: number) => ({
+            ...r,
+            caption: data.regions[i]?.caption || "",
+          }));
+          setRegions(merged);
+        }
       } catch (err: any) {
-        console.error("🔥 [Client] Error:", err);
+        console.error("🔥 Error:", err);
         setError(err.message || "Unknown error");
       } finally {
         setLoading(false);
@@ -52,48 +76,64 @@ export default function Home() {
     describeArtwork();
   }, []);
 
-  // Compute scaling factor between the padded canvas and displayed image
-  const getScale = () => {
+  // Automatically update imgScale when the image resizes
+  useEffect(() => {
     const img = imgRef.current;
-    if (!img) return { x: 1, y: 1 };
-    return {
-      x: img.clientWidth / canvasSize.width,
-      y: img.clientHeight / canvasSize.height,
-    };
-  };
+    if (!img || !canvasSize.width || !canvasSize.height) return;
 
-  const scale = getScale();
+    const updateScale = () => {
+      setImgScale({
+        x: img.clientWidth / canvasSize.width,
+        y: img.clientHeight / canvasSize.height,
+      });
+    };
+
+    // Initial calculation
+    updateScale();
+
+    // Observe image resize
+    const observer = new ResizeObserver(() => updateScale());
+    observer.observe(img);
+
+    // Also listen to window resizes (orientation, etc.)
+    window.addEventListener("resize", updateScale);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateScale);
+    };
+  }, [canvasSize]);
 
   return (
-    <main className="relative flex flex-col items-center w-screen h-[calc(100dvh-10px)] overflow-hidden text-center">
+    <main className="relative flex flex-col items-center w-screen h-[calc(100dvh-10px)] overflow-hidden text-center bg-background">
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <h1 className="text-l font-semibold mt-2 drop-shadow">
+      <h1 className="text-l font-semibold mt-2 text-primary drop-shadow">
         Talk Art to Me
       </h1>
-      <p className="text-300 text-xs max-w-md mb-2">
-        AI-generated accessibility description for art
+      <p className="text-300 text-primary text-xs max-w-md mb-2">
+        Tap on a region to hear its description aloud
       </p>
 
       {/* Image container */}
-      <div className="relative max-w-full max-h-full flex justify-center items-center">
+      <div className="relative flex justify-center items-center max-w-full max-h-full">
         <img
           ref={imgRef}
           src={IMAGE_PATH}
-          //alt="The Kiss – Gustav Klimt"
-          className="max-w-screen max-h-[calc(100dvh-80px)] object-contain border border-gray-700 rounded-md"
+          className="max-w-screen max-h-[calc(100dvh-80px)] object-contain rounded-md"
         />
 
-        {/* Precise grid overlay */}
+        {/* Reactive + clickable grid overlay */}
         {showGrid && (
-          <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-            {regions.map(({ coords: [x, y] }, i) => {
-              const left = x * scale.x;
-              const top = y * scale.y;
-              const width = regionSize * scale.x;
-              const height = regionSize * scale.y;
+          <div className="absolute top-0 left-0 w-full h-full">
+            {regions.map(({ coords: [x, y], caption }, i) => {
+              const left = x * imgScale.x;
+              const top = y * imgScale.y;
+              const width = regionSize * imgScale.x;
+              const height = regionSize * imgScale.y;
               return (
                 <div
                   key={i}
+                  onClick={() => speak(caption || `Region ${i + 1}`)}
                   style={{
                     position: "absolute",
                     left,
@@ -102,7 +142,19 @@ export default function Home() {
                     height,
                     border: "1px solid rgba(255,255,255,0.4)",
                     boxSizing: "border-box",
+                    backgroundColor: "rgba(255,255,255,0.05)",
+                    transition: "all 0.15s ease-out",
+                    cursor: "pointer",
                   }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      "rgba(255,255,255,0.15)")
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.backgroundColor =
+                      "rgba(255,255,255,0.05)")
+                  }
+                  title={caption}
                 />
               );
             })}
@@ -110,13 +162,21 @@ export default function Home() {
         )}
       </div>
 
-      {/* Toggle button */}
-      <button
-        onClick={() => setShowGrid(!showGrid)}
-        className="absolute top-4 right-4 bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
-      >
-        {showGrid ? "Hide Grid" : "Show Grid"}
-      </button>
+      {/* Toggle grid + Stop speech */}
+      <div className="absolute top-4 right-4 flex gap-2">
+        <button
+          onClick={() => setShowGrid(!showGrid)}
+          className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
+        >
+          {showGrid ? "Hide Grid" : "Show Grid"}
+        </button>
+        <button
+          onClick={stopSpeaking}
+          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition"
+        >
+          Stop
+        </button>
+      </div>
 
       {/* Status + Output */}
       {loading && (
