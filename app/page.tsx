@@ -16,7 +16,7 @@ export default function Home() {
   //const IMAGE_PATH = "sample-artworks/The_Kiss-Gustav_Klimt.jpg"; // in /public
   //const IMAGE_PATH = "sample-artworks/Tequila_Sunset-Disco_Elysium.png";
 
-  const [imagePath, setImagePath] = useState("sample-artworks/The_Saturday_Evening_Post-J.C.Leyendecker.jpg");
+  const [imagePath, setImagePath] = useState("sample-artworks/The_Empress-Cyberpunk_2077.jpg");
 
   // List of sample artworks
   const artworks = [
