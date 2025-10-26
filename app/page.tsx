@@ -11,9 +11,11 @@ export default function Home() {
   const [regions, setRegions] = useState<{ coords: [number, number]; caption?: string }[]>([]);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [imgScale, setImgScale] = useState({ x: 1, y: 1 });
-  const [audioEnabled, setAudioEnabled] = useState(false);
 
   const imgRef = useRef<HTMLImageElement>(null);
+  //const IMAGE_PATH = "sample-artworks/The_Kiss-Gustav_Klimt.jpg"; // in /public
+  //const IMAGE_PATH = "sample-artworks/Tequila_Sunset-Disco_Elysium.png";
+
   const [imagePath, setImagePath] = useState("sample-artworks/The_Empress-Cyberpunk_2077.jpg");
 
   // List of sample artworks
@@ -25,7 +27,7 @@ export default function Home() {
     "sample-artworks/The_Virgin-Gustav_Klimt.jpg",
   ];
 
-  // Pick a random artwork
+  // Function to pick a random artwork
   function loadRandomArtwork() {
     const random = artworks[Math.floor(Math.random() * artworks.length)];
     setImagePath(random);
@@ -33,42 +35,29 @@ export default function Home() {
     setOutput("Preparing image...");
   }
 
-  const regionSize = 200;
+  const regionSize = 200; // must match your imageProcessing.ts
 
-  // 🗣️ Speak helper (works after user clicks once)
+  // 🗣️ TTS: helper to speak text aloud
   function speak(text: string) {
-    if (!text || !audioEnabled) return;
-    try {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "en-US";
-      utterance.rate = 0.8;
-      utterance.pitch = 1;
-      speechSynthesis.cancel();
-      speechSynthesis.speak(utterance);
-    } catch (err) {
-      console.error("TTS error:", err);
-    }
+    if (!text) return;
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = "en-US";
+    utterance.rate = 1.1;
+    utterance.pitch = 1;
+    speechSynthesis.cancel(); // stop current speech before speaking new
+    speechSynthesis.speak(utterance);
   }
 
+  // 🗣️ Optional: stop speech if needed
   function stopSpeaking() {
     speechSynthesis.cancel();
   }
 
-  // Enable audio on first click (required by mobile browsers)
-  useEffect(() => {
-    const unlock = () => setAudioEnabled(true);
-    window.addEventListener("click", unlock, { once: true });
-    window.addEventListener("touchstart", unlock, { once: true });
-    return () => {
-      window.removeEventListener("click", unlock);
-      window.removeEventListener("touchstart", unlock);
-    };
-  }, []);
-
-  // Describe artwork when loaded
+  // Load and describe the artwork
   useEffect(() => {
     async function describeArtwork() {
       try {
+
         console.log("🎨 Starting image processing...");
         const { imageBase64, regions, paddedWidth, paddedHeight } =
           (await processImageFromUrl(imagePath, regionSize, 1200)) as any;
@@ -77,7 +66,7 @@ export default function Home() {
         setRegions(regions);
         setCanvasSize({ width: paddedWidth, height: paddedHeight });
 
-        // Send to Gemini API
+        // Send to Gemini
         console.log("🚀 Sending to API...");
         const response = await fetch("/api/describe", {
           method: "POST",
@@ -89,13 +78,7 @@ export default function Home() {
         console.log("✅ Gemini returned:", data);
         setOutput(JSON.stringify(data, null, 2));
 
-        // 🗣️ Read full artwork description once finished
-        if (data?.overall || data?.description) {
-          const desc = data.overall || data.description;
-          setTimeout(() => speak(desc), 800);
-        }
-
-        // Attach region captions
+        // 🗣️ Attach captions to regions if available
         if (data?.regions?.length) {
           const merged = regions.map((r: any, i: number) => ({
             ...r,
@@ -112,9 +95,9 @@ export default function Home() {
     }
 
     describeArtwork();
-  }, [imagePath, audioEnabled]);
+  }, []);
 
-  // Scale updates
+  // Automatically update imgScale when the image resizes
   useEffect(() => {
     const img = imgRef.current;
     if (!img || !canvasSize.width || !canvasSize.height) return;
@@ -126,10 +109,16 @@ export default function Home() {
       });
     };
 
+    // Initial calculation
     updateScale();
+
+    // Observe image resize
     const observer = new ResizeObserver(() => updateScale());
     observer.observe(img);
+
+    // Also listen to window resizes (orientation, etc.)
     window.addEventListener("resize", updateScale);
+
     return () => {
       observer.disconnect();
       window.removeEventListener("resize", updateScale);
@@ -139,35 +128,37 @@ export default function Home() {
   return (
     <main className="relative flex flex-col items-center w-screen h-[calc(100dvh-10px)] overflow-hidden text-center bg-background">
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-      <h1 className="text-l font-semibold mt-2 text-primary drop-shadow">Talk Art to Me</h1>
+      <h1 className="text-l font-semibold mt-2 text-primary drop-shadow">
+        Talk Art to Me
+      </h1>
       <p className="text-300 text-primary text-xs max-w-md mb-2">
         AI-generated accessibility description for art
       </p>
 
-      {/* Buttons */}
-      <div className="flex gap-2 mb-3">
+      {/* Toggle grid + Stop speech */}
+      <div className="flex gap-2">
         <button
           onClick={() => setShowGrid(!showGrid)}
-          className="bg-black/40 text-white px-3 py-1 rounded-sm text-xs hover:bg-black/60 transition"
+          className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
         >
           {showGrid ? "Hide Grid" : "Show Grid"}
         </button>
         <button
-          onClick={loadRandomArtwork}
-          className="bg-green-600/70 text-white px-3 py-1 rounded-sm text-xs hover:bg-green-700 transition"
-        >
-          Random Artwork
-        </button>
-        <button
           onClick={stopSpeaking}
-          className="bg-red-600/70 text-white px-3 py-1 rounded-sm text-xs hover:bg-red-700 transition"
+          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition"
         >
           Stop
         </button>
+        <button
+          onClick={loadRandomArtwork}
+          className="bg-green-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition"
+        >
+          Random Artwork
+        </button>
+
       </div>
 
-      {/* Image + Grid */}
+      {/* Image container (centered vertically + horizontally) */}
       <div className="flex flex-1 items-center justify-center w-full h-full relative overflow-hidden">
         <div className="relative flex items-center justify-center">
           <img
@@ -184,7 +175,7 @@ export default function Home() {
             className="object-contain max-w-[100vw] max-h-[calc(100dvh-120px)] rounded-md"
           />
 
-          {/* Clickable grid regions */}
+          {/* Reactive + clickable grid overlay (clickable even when hidden) */}
           <div className="absolute top-0 left-0 w-full h-full z-10">
             {regions.map(({ coords: [x, y], caption }, i) => {
               const left = x * imgScale.x;
@@ -208,6 +199,16 @@ export default function Home() {
                     transition: "all 0.15s ease-out",
                     cursor: "pointer",
                   }}
+                  onMouseEnter={(e) => {
+                    if (showGrid)
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(255,255,255,0.15)";
+                  }}
+                  onMouseLeave={(e) => {
+                    if (showGrid)
+                      e.currentTarget.style.backgroundColor =
+                        "rgba(255,255,255,0.05)";
+                  }}
                   title={caption}
                 />
               );
@@ -216,10 +217,18 @@ export default function Home() {
         </div>
       </div>
 
+
+      {/* Status + Output */}
       {loading && (
         <p className="text-blue-400 font-medium mt-2">Analyzing artwork...</p>
       )}
       {error && <p className="text-red-400 font-medium mt-2">Error: {error}</p>}
+
+      {/* {!loading && !error && (
+        <pre className="bg-gray-100 p-4 rounded-md w-full max-w-3xl overflow-auto text-left text-sm mt-3">
+          {output}
+        </pre>
+      )} */}
     </main>
   );
 }
