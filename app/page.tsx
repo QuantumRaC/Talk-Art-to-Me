@@ -196,8 +196,7 @@ export default function Home() {
 
 
       {/* Toggle grid + Stop speech */}
-<div className="fixed top-20 right-4 flex flex-col sm:flex-row gap-2 z-20">
-
+      <div className="absolute top-4 right-4 flex gap-2">
         <button
           onClick={() => setShowGrid(!showGrid)}
           className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
@@ -216,7 +215,6 @@ export default function Home() {
         >
           Random Artwork
         </button>
-
       </div>
 
       {/* Status + Output */}
