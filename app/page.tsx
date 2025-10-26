@@ -42,7 +42,7 @@ export default function Home() {
     if (!text) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
-    utterance.rate = 0.5;
+    utterance.rate = 1;
     utterance.pitch = 1;
     speechSynthesis.cancel(); // stop current speech before speaking new
     speechSynthesis.speak(utterance);
@@ -196,7 +196,8 @@ export default function Home() {
 
 
       {/* Toggle grid + Stop speech */}
-      <div className="absolute top-4 right-4 flex gap-2">
+<div className="fixed top-20 right-4 flex flex-col sm:flex-row gap-2 z-20">
+
         <button
           onClick={() => setShowGrid(!showGrid)}
           className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
