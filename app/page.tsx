@@ -13,12 +13,8 @@ export default function Home() {
   const [imgScale, setImgScale] = useState({ x: 1, y: 1 });
 
   const imgRef = useRef<HTMLImageElement>(null);
-  //const IMAGE_PATH = "sample-artworks/The_Kiss-Gustav_Klimt.jpg"; // in /public
-  //const IMAGE_PATH = "sample-artworks/Tequila_Sunset-Disco_Elysium.png";
-
   const [imagePath, setImagePath] = useState("sample-artworks/The_Empress-Cyberpunk_2077.jpg");
 
-  // List of sample artworks
   const artworks = [
     "sample-artworks/The_Kiss-Gustav_Klimt.jpg",
     "sample-artworks/Tequila_Sunset-Disco_Elysium.png",
@@ -27,7 +23,6 @@ export default function Home() {
     "sample-artworks/The_Virgin-Gustav_Klimt.jpg",
   ];
 
-  // Function to pick a random artwork
   function loadRandomArtwork() {
     const random = artworks[Math.floor(Math.random() * artworks.length)];
     setImagePath(random);
@@ -35,29 +30,26 @@ export default function Home() {
     setOutput("Preparing image...");
   }
 
-  const regionSize = 200; // must match your imageProcessing.ts
+  const regionSize = 200;
 
-  // 🗣️ TTS: helper to speak text aloud
   function speak(text: string) {
     if (!text) return;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-US";
     utterance.rate = 1;
     utterance.pitch = 1;
-    speechSynthesis.cancel(); // stop current speech before speaking new
+    speechSynthesis.cancel();
     speechSynthesis.speak(utterance);
   }
 
-  // 🗣️ Optional: stop speech if needed
   function stopSpeaking() {
     speechSynthesis.cancel();
   }
 
-  // Load and describe the artwork
+  // 🧠 useEffect now *always* has [imagePath] as dependency
   useEffect(() => {
     async function describeArtwork() {
       try {
-        
         console.log("🎨 Starting image processing...");
         const { imageBase64, regions, paddedWidth, paddedHeight } =
           (await processImageFromUrl(imagePath, regionSize, 1200)) as any;
@@ -66,7 +58,6 @@ export default function Home() {
         setRegions(regions);
         setCanvasSize({ width: paddedWidth, height: paddedHeight });
 
-        // Send to Gemini
         console.log("🚀 Sending to API...");
         const response = await fetch("/api/describe", {
           method: "POST",
@@ -78,7 +69,13 @@ export default function Home() {
         console.log("✅ Gemini returned:", data);
         setOutput(JSON.stringify(data, null, 2));
 
-        // 🗣️ Attach captions to regions if available
+        // 🗣️ Read full artwork description
+        if (data?.description) {
+          stopSpeaking();
+          setTimeout(() => speak(data.description), 500);
+        }
+
+        // 🗣️ Attach region captions
         if (data?.regions?.length) {
           const merged = regions.map((r: any, i: number) => ({
             ...r,
@@ -95,9 +92,8 @@ export default function Home() {
     }
 
     describeArtwork();
-  }, []);
+  }, [imagePath]); // ✅ fixed: consistent dependency array
 
-  // Automatically update imgScale when the image resizes
   useEffect(() => {
     const img = imgRef.current;
     if (!img || !canvasSize.width || !canvasSize.height) return;
@@ -109,14 +105,9 @@ export default function Home() {
       });
     };
 
-    // Initial calculation
     updateScale();
-
-    // Observe image resize
     const observer = new ResizeObserver(() => updateScale());
     observer.observe(img);
-
-    // Also listen to window resizes (orientation, etc.)
     window.addEventListener("resize", updateScale);
 
     return () => {
@@ -135,20 +126,14 @@ export default function Home() {
         AI-generated accessibility description for art
       </p>
 
-      {/* Toggle grid + Stop speech */}
-      <div className="flex gap-2">
+      {/* Buttons below header */}
+      <div className="flex gap-2 mb-3">
         <button
           onClick={() => setShowGrid(!showGrid)}
           className="bg-black/40 text-white px-3 py-1 rounded-sm text-xs hover:bg-black/60 transition"
         >
           {showGrid ? "Hide Grid" : "Show Grid"}
         </button>
-        {/* <button
-          onClick={stopSpeaking}
-          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition"
-        >
-          Stop
-        </button> */}
         <button
           onClick={loadRandomArtwork}
           className="bg-green-600/70 text-white px-3 py-1 rounded-sm text-xs hover:bg-green-700 transition"
@@ -157,7 +142,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* Image container (centered vertically + horizontally) */}
+      {/* Image container */}
       <div className="flex flex-1 items-center justify-center w-full h-full relative overflow-hidden">
         <div className="relative flex items-center justify-center">
           <img
@@ -174,7 +159,7 @@ export default function Home() {
             className="object-contain max-w-[100vw] max-h-[calc(100dvh-120px)] rounded-md"
           />
 
-          {/* Reactive + clickable grid overlay (clickable even when hidden) */}
+          {/* Clickable grid overlay */}
           <div className="absolute top-0 left-0 w-full h-full z-10">
             {regions.map(({ coords: [x, y], caption }, i) => {
               const left = x * imgScale.x;
@@ -216,17 +201,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Status + Output */}
       {loading && (
         <p className="text-blue-400 font-medium mt-2">Analyzing artwork...</p>
       )}
       {error && <p className="text-red-400 font-medium mt-2">Error: {error}</p>}
-
-      {/* {!loading && !error && (
-        <pre className="bg-gray-100 p-4 rounded-md w-full max-w-3xl overflow-auto text-left text-sm mt-3">
-          {output}
-        </pre>
-      )} */}
     </main>
   );
 }
