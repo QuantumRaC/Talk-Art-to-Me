@@ -5,7 +5,7 @@ import { processImageFromUrl } from "@/lib/imageProcessing";
 
 export default function Home() {
   const [output, setOutput] = useState<string>("Preparing image...");
-  const [showGrid, setShowGrid] = useState(true);
+  const [showGrid, setShowGrid] = useState(false);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [regions, setRegions] = useState<{ coords: [number, number]; caption?: string }[]>([]);
@@ -216,7 +216,6 @@ export default function Home() {
           </div>
         </div>
       </div>
-
 
       {/* Status + Output */}
       {loading && (
