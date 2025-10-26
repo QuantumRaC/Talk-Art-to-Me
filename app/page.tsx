@@ -135,6 +135,28 @@ export default function Home() {
         AI-generated accessibility description for art
       </p>
 
+      {/* Toggle grid + Stop speech */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => setShowGrid(!showGrid)}
+          className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
+        >
+          {showGrid ? "Hide Grid" : "Show Grid"}
+        </button>
+        <button
+          onClick={stopSpeaking}
+          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition"
+        >
+          Stop
+        </button>
+        <button
+          onClick={loadRandomArtwork}
+          className="bg-green-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition"
+        >
+          Random Artwork
+        </button>
+      </div>
+
       {/* Image container (centered vertically + horizontally) */}
       <div className="flex flex-1 items-center justify-center w-full h-full relative overflow-hidden">
         <div className="relative flex items-center justify-center">
@@ -192,29 +214,6 @@ export default function Home() {
             })}
           </div>
         </div>
-      </div>
-
-
-      {/* Toggle grid + Stop speech */}
-      <div className="absolute top-4 right-4 flex gap-2">
-        <button
-          onClick={() => setShowGrid(!showGrid)}
-          className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
-        >
-          {showGrid ? "Hide Grid" : "Show Grid"}
-        </button>
-        <button
-          onClick={stopSpeaking}
-          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition"
-        >
-          Stop
-        </button>
-        <button
-          onClick={loadRandomArtwork}
-          className="bg-green-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition"
-        >
-          Random Artwork
-        </button>
       </div>
 
       {/* Status + Output */}
