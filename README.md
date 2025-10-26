@@ -1,36 +1,124 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+# Talk Art to Me
+
+**Giving voice to visual art.**
+
+## Overview
+
+**Talk Art to Me** is an AI-powered web app that generates *natural, spoken descriptions* of visual art.
+It’s designed to make paintings and digital artworks accessible for people who are blind or visually impaired — or for anyone exploring art through sound.
+
+The app uses **Google Gemini’s multimodal AI** to analyze an artwork and produce both:
+
+* a **global description** (what the whole artwork conveys), and
+* **regional captions** (detailed descriptions of smaller areas).
+
+Users can:
+
+* Tap on the artwork to hear descriptions of each region,
+* Toggle an interactive grid overlay,
+* Load random artworks, and
+* Listen to AI-generated narration through browser text-to-speech.
+
+---
+
+## Motivation
+
+Art accessibility often stops at one-line alt-text.
+As a **full-stack developer** and **digital artist**, I wanted to create something that bridges technology and empathy — a project that uses AI to make art *audible* and *inclusive*.
+
+This project was built for **GatorHack 2025**, but it also represents a larger goal:
+
+> To use AI not just to build something new, but to make something meaningful.
+
+---
+
+## Tech Stack
+
+| Layer            | Technology                                |
+| ---------------- | ----------------------------------------- |
+| Frontend         | Next.js (React + TypeScript), TailwindCSS |
+| Backend          | Next.js API Routes                        |
+| AI Model         | Google Gemini (Vision + Text multimodal)  |
+| Accessibility    | Web Speech API (Text-to-Speech)           |
+| Image Processing | Custom region tiling + Canvas API         |
+| Hosting          | Vercel                                    |
+
+---
+
+## Architecture
+
+```
+Frontend (Next.js) 
+ ├── Loads artwork (from /public or user upload)
+ ├── Divides image into square regions
+ ├── Sends image + region data → /api/describe
+ ├── Receives AI JSON (global + region captions)
+ ├── Displays grid overlay and plays narration
+ └── User can interact, toggle grid, or randomize art
+
+Backend (API Route)
+ ├── Receives base64 image and region metadata
+ ├── Calls Gemini multimodal model
+ ├── Returns JSON { description, regions[] }
+```
+
+---
 
 ## Getting Started
 
-First, run the development server:
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/yourusername/talk-art-to-me.git
+cd talk-art-to-me
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Add your environment variables
+
+Create a `.env.local` file in the root directory:
+
+```bash
+GEMINI_API_KEY=your_api_key_here
+```
+
+### 4. Run the development server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Accessibility Features
 
-## Learn More
+✅ Automatic AI-generated description narration
+✅ Interactive clickable grid overlay
+✅ Adjustable speech rate (coming soon)
+✅ Multilingual TTS (planned)
+✅ Keyboard navigation (planned)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Next Steps (2025/10/26)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+* [ ] Add **local artwork upload** support
+* [ ] Add **server-side caching** for faster AI responses
+* [ ] Implement **adjustable speech speed** and **language selection**
+* [ ] Add **keyboard navigation** and **ARIA improvements**
+* [ ] Extend to **education and digital museum** applications
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📸 Credits
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Sample artworks used are for **demonstration and educational purposes only**. File names are the artworks' names and source.
+Project created by **Cynthia Yao** ([@QuantumRaC](https://github.com/QuantumRaC)).
