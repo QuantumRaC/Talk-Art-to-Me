@@ -139,19 +139,19 @@ export default function Home() {
       <div className="flex gap-2">
         <button
           onClick={() => setShowGrid(!showGrid)}
-          className="bg-black/40 text-white px-3 py-1 rounded-md text-sm hover:bg-black/60 transition"
+          className="bg-black/40 text-white px-3 py-1 rounded-md text-xs hover:bg-black/60 transition"
         >
           {showGrid ? "Hide Grid" : "Show Grid"}
         </button>
         <button
           onClick={stopSpeaking}
-          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-red-700 transition"
+          className="bg-red-600/70 text-white px-3 py-1 rounded-md text-xs hover:bg-red-700 transition"
         >
-          Stop
+          Stop Speaking
         </button>
         <button
           onClick={loadRandomArtwork}
-          className="bg-green-600/70 text-white px-3 py-1 rounded-md text-sm hover:bg-green-700 transition"
+          className="bg-green-600/70 text-white px-3 py-1 rounded-md text-xs hover:bg-green-700 transition"
         >
           Random Artwork
         </button>
